@@ -1,0 +1,83 @@
+{
+  "type": "object",
+  "properties": {
+      "title": {
+          "type": "string"
+      },
+      "sourceUrl": {
+          "type": "string"
+      },
+      "sourceName": {
+          "type": "string"
+      },
+      "image": {
+          "type": "string"
+      },
+      "servings": {
+          "type": "integer"
+      },
+      "instructions": {
+          "type": "array",
+          "items": {
+              "type": "string"
+      },
+      "ingredients": {
+          "type": "array",
+          "items": {
+              "type": "object",
+              "required": [
+                  "label",
+                  "usAmount",
+                  "usUnit",
+                  "metricAmount",
+                  "metricUnit"
+              ],
+              "properties": {
+                  "label": {
+                      "type": "string"
+                  },
+                  "usAmount": {
+                      "type": "number"
+                  },
+                  "usUnit": {
+                      "type": "string"
+                  },
+                  "metricAmount": {
+                      "type": "number"
+                  },
+                  "metricUnit": {
+                      "type": "string"
+                  }
+              }
+          }
+      },
+      "courses": {
+          "type": "array",
+          "items": {
+              "type": "string"
+          }
+      },
+      "diets": {
+          "type": "array",
+          "items": {
+              "type": "string"
+          }
+      },
+      "occasions": {
+          "type": "array",
+          "items": {
+              "type": "string"
+          }
+      },
+      "cuisines": {
+          "type": "array",
+          "items": {
+              "type": "string"
+          }
+      }
+    }
+  },
+  "required": [
+    "title"
+    ]
+}

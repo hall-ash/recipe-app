@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+      "title": {
+          "type": "string"
+      },
+      "url": {
+          "type": "string"
+      },
+      "sourceName": {
+          "type": "string"
+      },
+      "image": {
+          "type": "string"
+      },
+      "servings": {
+          "type": "integer"
+      },
+      "notes": {
+        "type": "string"
+      },
+      "instructions": {
+          "type": "array",
+          "items": {
+              "type": "string"
+      },
+      "ingredients": {
+          "type": "array",
+          "items": {
+              "type": "object",
+              "required": [
+                  "id",
+                  "usAmount",
+                  "metricAmount"
+              ],
+              "properties": {
+                  "id": {
+                      "type": "number"
+                  },
+                  "usAmount": {
+                      "type": "number"
+                  },
+                  "metricAmount": {
+                      "type": "number"
+                  }
+              }
+          }
+      }
+    }
+  }
+}
