@@ -64,8 +64,8 @@ router.get("/", ensureAuthUserOrAdmin, async (req, res, next) => {
  */
  router.get("/:id", ensureAuthUserOrAdmin, async (req, res, next) => {
   try {
-    const { username } = req.params;
-    const category = await Category.get(username, req.params.id);
+    const { id } = req.params;
+    const category = await Category.get(id);
     return res.json({ category });
 
   } catch (e) {
@@ -92,8 +92,8 @@ router.get("/", ensureAuthUserOrAdmin, async (req, res, next) => {
       throw new BadRequestError(errs);
     }
 
-    const { username, id } = req.params;
-    const category = await Category.update(username, id, req.body);
+    const { id } = req.params;
+    const category = await Category.update(id, req.body);
     return res.json({ category });
   } catch (err) {
     return next(err);
@@ -110,9 +110,9 @@ router.get("/", ensureAuthUserOrAdmin, async (req, res, next) => {
 
 router.delete("/:id", ensureAuthUserOrAdmin, async (req, res, next) => {
   try {
-    const { username } = req.params;
-    await Category.remove(username, req.params.id);
-    return res.json({ deleted: +req.params.id });
+    const { id } = req.params;
+    await Category.remove(id);
+    return res.json({ deleted: +id });
   } catch (err) {
     return next(err);
   }
@@ -127,9 +127,9 @@ router.delete("/:id", ensureAuthUserOrAdmin, async (req, res, next) => {
  */
 router.post("/:categoryId/recipe/:recipeId", ensureAuthUserOrAdmin, async (req, res, next) => {
   try {
-    const { username } = req.params;
+  
     const { categoryId, recipeId } = req.params;
-    await Category.addRecipe(username, categoryId, recipeId);
+    await Category.addRecipe(categoryId, recipeId);
     return res.json({ added: +recipeId });
   } catch (err) {
     return next(err);

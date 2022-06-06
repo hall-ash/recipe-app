@@ -127,7 +127,7 @@ describe("get", () => {
 
   test("returns the category given its id", async () => {
 
-    const category = await Category.get(ids.users[0], ids.categories[0]);
+    const category = await Category.get(ids.categories[0]);
 
     expect(category).toEqual({
       id: ids.categories[0],
@@ -142,7 +142,7 @@ describe("get", () => {
 
   test("throws NotFoundError if category is not in database", async () => {
     try {
-      await Category.get(ids.users[0], -1)
+      await Category.get(-1)
     } catch (err) {
       expect(err).toBeInstanceOf(NotFoundError);
     }
@@ -208,7 +208,7 @@ describe("getCategorySubTree", () => {
       RETURNING id
     `, [ids.users[0], ids.categories[0]])).rows.map(c => c.id);
 
-    const categoryData = await Category.getCategorySubTree(ids.users[0], ids.categories[0]);
+    const categoryData = await Category.getCategorySubTree(ids.categories[0]);
 
     expect(categoryData).toEqual({
       id: ids.categories[0],
@@ -238,7 +238,7 @@ describe("getCategorySubTree", () => {
 
   test("throws NotFoundError if category is not in database", async () => {
     try {
-      await Category.getCategorySubTree(ids.users[0], -1);
+      await Category.getCategorySubTree(-1);
     } catch (err) {
       expect(err).toBeInstanceOf(NotFoundError);
     }
@@ -349,7 +349,7 @@ describe("update", () => {
       parentId: ids.parentCategories[1]
     };
 
-    const updated = await Category.update(ids.users[0], ids.categories[0], data);
+    const updated = await Category.update(ids.categories[0], data);
 
     expect(updated).toEqual({
       id: ids.categories[0],
@@ -374,7 +374,7 @@ describe("update", () => {
     };
 
     try {
-      await Category.update(ids.users[0], ids.categories[0], data)
+      await Category.update(ids.categories[0], data)
     } catch (err) {
       expect(err).toBeInstanceOf(BadRequestError);
     }
@@ -382,7 +382,7 @@ describe("update", () => {
 
   test("throws NotFoundError if category is not in database", async () => {
     try {
-      await Category.update(ids.users[0], -1, { label: 'new label'});
+      await Category.update(-1, { label: 'new label'});
     } catch (err) {
       expect(err).toBeInstanceOf(NotFoundError);
     }
@@ -395,7 +395,7 @@ describe("update", () => {
     };
     
     try {
-      await Category.update(ids.users[0], ids.parentCategories[0], data);
+      await Category.update(ids.parentCategories[0], data);
     } catch (err) {
       console.error(err)
       expect(err).toBeInstanceOf(ForbiddenError);
@@ -413,7 +413,7 @@ describe("remove", () => {
       SELECT * FROM categories
     `)).rows.length;
 
-    await Category.remove(ids.users[0], ids.categories[0]);
+    await Category.remove(ids.categories[0]);
 
     const numCategoriesAfterRemove = (await db.query(`
       SELECT * FROM categories
@@ -425,7 +425,7 @@ describe("remove", () => {
 
   test("throws NotFoundError if category not in database", async () => {
     try {
-      await Category.remove(ids.users[0], -1);
+      await Category.remove(-1);
     } catch (err) {
       expect(err).toBeInstanceOf(NotFoundError);
     }
@@ -433,7 +433,7 @@ describe("remove", () => {
 
   test("throws ForbiddenError if attempting to delete default root category", async () => {
     try {
-      await Category.remove(ids.users[0], ids.parentCategories[0]);
+      await Category.remove(ids.parentCategories[0]);
     } catch (err) {
       expect(err).toBeInstanceOf(ForbiddenError);
     }
@@ -445,7 +445,7 @@ describe("remove", () => {
 describe("addRecipe", () => {
 
   test("adds recipe to category", async () => {
-    await Category.addRecipe(ids.users[0], ids.parentCategories[0], ids.recipe);
+    await Category.addRecipe(ids.parentCategories[0], ids.recipe);
 
     const dbRes = await db.query(`
       SELECT recipe_id, category_id
@@ -458,24 +458,16 @@ describe("addRecipe", () => {
 
   test("throws NotFoundError if recipe not found", async () => {
     try {
-      await Category.addRecipe(ids.users[0], ids.parentCategories[0], -1)
+      await Category.addRecipe(ids.parentCategories[0], -1)
     } catch (err) {
       console.log(err)
       expect(err).toBeInstanceOf(NotFoundError);
     }
   });
 
-  test("throws NotFoundError if user not found", async () => {
-    try {
-      await Category.addRecipe(-1, ids.parentCategories[0], ids.recipe)
-    } catch (err) {
-      expect(err).toBeInstanceOf(NotFoundError);
-    }
-  });
-
   test("throws NotFoundError if category not found", async () => {
     try {
-      await Category.addRecipe(ids.users[0], -1, ids.recipe)
+      await Category.addRecipe(-1, ids.recipe)
     } catch (err) {
       expect(err).toBeInstanceOf(NotFoundError);
     }

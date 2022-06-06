@@ -85,13 +85,13 @@ class Category {
    *                            and recipes is an array of recipe ids: [recipeId1, recipeId2, ...]
    * @throws {NotFoundError} Thrown if category is not in database.
    */
-  static async get(username, id) {
+  static async get(id) {
     
     const category = (await db.query(`
       SELECT ${Category.publicFields}
       FROM categories
-      WHERE id = $1 AND username = $2
-    `, [id, username])).rows[0];
+      WHERE id = $1 
+    `, [id])).rows[0];
 
     if (!category) throw new NotFoundError(`Id ${id} not found in categories`);
 
@@ -122,7 +122,7 @@ class Category {
     const rootIds = await this.getRootIds(username);
 
     const rootCategories = await Promise.all(rootIds.map(id => {
-      return this.get(username, id);
+      return this.get(id);
     }));
 
     return rootCategories;
@@ -139,7 +139,7 @@ class Category {
     const rootIds = await this.getRootIds(username);
 
     const categories = await Promise.all(rootIds.map(root => {
-      return this.getCategorySubTree(username, root);
+      return this.getCategorySubTree(root);
     }));
     return categories;
   }
@@ -177,16 +177,16 @@ class Category {
    *    ]
    * }
    */
-  static async getCategorySubTree(username, id) {
+  static async getCategorySubTree(id) {
     
-    const category = await Category.get(username, id);
+    const category = await Category.get(id);
     const categorySubTree = { ...category, children: [] }
     const { children } = category;
     
     if (!children.length) return categorySubTree;
     
     for (let i = 0; i < children.length; i++ ){
-      const child = await this.getCategorySubTree(username, children[i]);
+      const child = await this.getCategorySubTree(children[i]);
       categorySubTree.children.push(child);
     }
    
@@ -229,15 +229,15 @@ class Category {
    * @throws {NotFoundError} Thrown if category is not in database.
    * 
    */
-  static async update(username, id, data) {
+  static async update(id, data) {
 
     const { parentId, label } = data;
 
     const category = (await db.query(`
       SELECT parent_id AS "currParentId", label AS "currLabel"
       FROM categories
-      WHERE id = $1 AND username = $2
-    `, [id, username])).rows[0];
+      WHERE id = $1 
+    `, [id])).rows[0];
 
     if (!category) throw new NotFoundError(`Id ${id} not found in categories`);
     const { currLabel, currParentId } = category;
@@ -280,14 +280,14 @@ class Category {
    * @param {Number} id - category id 
    * @throws {NotFoundError} Thrown if category is not in database.
    */
-  static async remove(username, id) {
+  static async remove(id) {
 
     // check that category is not default root
     const category = (await db.query(`
       SELECT label, parent_id AS "parentId"
       FROM categories
-      WHERE id = $1 AND username = $2
-    `, [id, username])).rows[0];
+      WHERE id = $1 
+    `, [id])).rows[0];
 
     if (!category) throw new NotFoundError(`Id ${id} not found in categories`);
     const { label, parentId } = category;
@@ -313,21 +313,21 @@ class Category {
    * @throws {BadRequestError} Thrown if recipe was already 
    * added to category. 
    */
-   static async addRecipe(username, categoryId, recipeId) {
+   static async addRecipe(categoryId, recipeId) {
 
     // check if recipe exists for user
     const recipeExists = (await db.query(`
       SELECT id FROM recipes
-      WHERE id = $1 AND username = $2
-    `, [recipeId, username])).rows[0]
-    if (!recipeExists) throw new NotFoundError(`Recipe id ${recipeId} not found for user ${username}`);
+      WHERE id = $1 
+    `, [recipeId])).rows[0]
+    if (!recipeExists) throw new NotFoundError(`Recipe id ${recipeId} not found.`);
 
     // check if category exists for user
     const categoryExists = (await db.query(`
       SELECT id FROM categories
-      WHERE ID = $1 AND username = $2
-    `, [categoryId, username])).rows[0]
-    if (!categoryExists) throw new NotFoundError(`Category id ${categoryId} not found for user ${username}`);
+      WHERE ID = $1 
+    `, [categoryId])).rows[0]
+    if (!categoryExists) throw new NotFoundError(`Category id ${categoryId} not found.`);
 
     // check if category already added to recipe
     const isDuplicate = await db.query(`
