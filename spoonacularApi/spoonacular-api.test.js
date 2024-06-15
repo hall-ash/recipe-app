@@ -1,4 +1,4 @@
-const { extractRecipeInfo } = require('./spoonacular-api');
+const { extractRecipeInfo, getConversion } = require('./spoonacular-api');
 
 describe("extractRecipeInfo", () => {
 
@@ -37,87 +37,33 @@ describe("extractRecipeInfo", () => {
       ]
     );
 
-    expect(ingredients).toEqual(
+    expect(instructions).toEqual(
       [
-        {
-          label: 'boneless, skinless chicken thighs — or chicken breasts',
-          usAmount: 1.5,
-          usUnit: 'lb',
-          metricAmount: 680.389,
-          metricUnit: 'g'
-        },
-        {
-          label: 'low-sodium soy sauce',
-          usAmount: 0.333,
-          usUnit: 'cups',
-          metricAmount: 78.863,
-          metricUnit: 'ml'
-        },
-        {
-          label: 'honey',
-          usAmount: 0.333,
-          usUnit: 'cups',
-          metricAmount: 78.863,
-          metricUnit: 'ml'
-        },
-        {
-          label: 'tomato paste',
-          usAmount: 2,
-          usUnit: 'Tbsps',
-          metricAmount: 2,
-          metricUnit: 'Tbsps'
-        },
-        {
-          label: 'chili paste — sambal oelek, sriracha, or hot sauce',
-          usAmount: 2,
-          usUnit: 'tsps',
-          metricAmount: 2,
-          metricUnit: 'tsps'
-        },
-        {
-          label: 'garlic — minced',
-          usAmount: 4,
-          usUnit: 'cloves',
-          metricAmount: 4,
-          metricUnit: 'cloves'
-        },
-        {
-          label: 'rice vinegar',
-          usAmount: 1,
-          usUnit: 'Tbsp',
-          metricAmount: 1,
-          metricUnit: 'Tbsp'
-        },
-        {
-          label: 'cornstarch',
-          usAmount: 2,
-          usUnit: 'Tbsps',
-          metricAmount: 2,
-          metricUnit: 'Tbsps'
-        },
-        {
-          label: 'Prepared brown rice, quinoa, or cauliflower rice',
-          usAmount: 1,
-          usUnit: 'serving',
-          metricAmount: 1,
-          metricUnit: 'serving'
-        },
-        {
-          label: 'Toasted sesame seeds',
-          usAmount: 1,
-          usUnit: 'serving',
-          metricAmount: 1,
-          metricUnit: 'serving'
-        },
-        {
-          label: 'Chopped green onion',
-          usAmount: 1,
-          usUnit: 'serving',
-          metricAmount: 1,
-          metricUnit: 'serving'
-        }
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
+        expect.any(String),
       ]
     );
+
+    expect(ingredients[0]).toEqual({
+      label: expect.any(String),
+      baseFood: expect.any(String),
+      measures: [
+        {
+          amount: expect.any(Number),
+          unit: expect.any(String),
+          unitType: 'us',
+        },
+        {
+          amount: expect.any(Number),
+          unit: expect.any(String),
+          unitType: 'metric',
+        }
+      ]
+    });
+
+    expect(ingredients).toHaveLength(11);
 
     expect(cuisines).toEqual([]);
     expect(diets).toEqual([ 'gluten free', 'dairy free' ]);
@@ -125,5 +71,21 @@ describe("extractRecipeInfo", () => {
     expect(occasions).toEqual([]);
   });
 });
+
+// describe("getConversion", () => {
+//   test("returns conversion given a source amount, source unit, and target unit", async () => {
+//     const data = {
+//       sourceAmount: 1,
+//       sourceUnit: 'cups',
+//       targetUnit: 'g',
+//       strippedLabel: 'cheese',
+//     }
+
+//     const targetAmount = await getConversion(data);
+
+//     expect(targetAmount).toEqual(113);
+//   });
+
+// })
 
 

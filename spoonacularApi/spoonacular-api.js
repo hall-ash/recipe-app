@@ -35,11 +35,22 @@ const extractRecipeInfo = async ({ url }) => {
     // get array of ingredients: 
     // [{ name, usAmount, usUnit, metricAmount, metricUnit }, ...]
     const ingredients = extendedIngredients.map(ingredient => {
-      const { originalName: label, measures } = ingredient;
-      const { amount: usAmount, unitShort: usUnit } = measures.us;
-      const { amount: metricAmount, unitShort: metricUnit } = measures.metric;
+      const { originalName: label, name: baseFood, measures: { us, metric } } = ingredient;
+
+      const measures = [
+        {
+          amount: us.amount,
+          unit: us.unitShort,
+          unitType: 'us',
+        },
+        {
+          amount: metric.amount,
+          unit: metric.unitShort,
+          unitType: 'metric',
+        }
+      ];
       
-      return { label, usAmount, usUnit, metricAmount, metricUnit };
+      return { label, baseFood, measures };
     });
 
     // get domain name if source is null
@@ -56,7 +67,32 @@ const extractRecipeInfo = async ({ url }) => {
   }
 }
 
+const getConversion = async (baseFood, sourceAmount, sourceUnit, targetUnit) => {
+
+  try {
+    const res = await axios({
+      url: '/convert',
+      baseURL: BASE_API_URL,
+      params: {
+        apiKey: process.env.SPOONACULAR_API_KEY,
+        sourceAmount,
+        sourceUnit,
+        targetUnit,
+        ingredientName: baseFood,
+      }
+    })
+
+    return res.data.targetAmount;
+
+    // return new Promise(resolve => resolve(113));
+
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 
 module.exports = {
   extractRecipeInfo,
+  getConversion
 }

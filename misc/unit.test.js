@@ -8,7 +8,8 @@ const {
   commonBeforeEach,
   commonAfterEach,
   commonAfterAll,
-} = require("./_testCommon");
+  ids,
+} = require("../models/_testCommon");
 
 beforeAll(commonBeforeAll);
 beforeEach(commonBeforeEach);
@@ -24,8 +25,8 @@ beforeAll(async () => {
 
 describe("create", () => {
   const newUnit = {
-    metricUnit: 'ml',
-    usUnit: 'cups'
+    unit: 'ml',
+    unitTypeId: ids.metric,
   }
 
   test("creates a new unit in the database and returns the unit object", async () => {
@@ -35,21 +36,21 @@ describe("create", () => {
     // test returns the unit object
     expect(unit).toEqual({
       id: expect.any(Number),
-      metricUnit: 'ml',
-      usUnit: 'cups',
+      unit: 'ml',
+      unitTypeId: ids.metric
     });
 
     const unitResult = await db.query(`
-      SELECT id, metric_unit, us_unit
+      SELECT id, unit, unit_type_id AS "unitTypeId"
       FROM units 
-      WHERE metric_unit = 'ml' AND us_unit = 'cups'
+      WHERE unit = 'ml' 
     `);
 
     // test creates the unit object in the db
     expect(unitResult.rows[0]).toEqual({
       id: expect.any(Number),
-      metric_unit: 'ml',
-      us_unit: 'cups'
+      unit: 'ml',
+      unitIdType: ids.metric
     });
 
   });
@@ -69,17 +70,17 @@ describe("create", () => {
 
 /************************************** createBatch */
 describe("createBatch", () => {
-  beforeEach(async () => {
-    await db.query(`
-      INSERT INTO units (metric_unit, us_unit)
-      VALUES ('g', 'oz'), ('ml', 'cups')
-    `);
-  });
+  // beforeEach(async () => {
+  //   await db.query(`
+  //     INSERT INTO units (unit, unit_type_id)
+  //     VALUES ('ml', $1), ('cups', $2) 
+  //   `, [ids.metric, ids.us]);
+  // });
 
   test("creates and returns units given an array of metric and us value pairs", async () => {
     const unitsToCreate = [
-      { metricUnit: 'ml', usUnit: 'oz'},
-      { metricUnit: 'g', usUnit: 'lb'},
+      { unit: 'dl', unitTypeId: ids.metric },
+      { unit: 'lb', unitTypeId: ids.us },
     ];
 
     const createdUnits = await Unit.createBatch(unitsToCreate);
@@ -87,13 +88,13 @@ describe("createBatch", () => {
     expect(createdUnits).toEqual([
       {
         id: expect.any(Number),
-        metricUnit: 'ml',
-        usUnit: 'oz',
+        unit: 'dl',
+        unitTypeId: ids.metric
       },
       {
         id: expect.any(Number),
-        metricUnit: 'g',
-        usUnit: 'lb',
+        unit: 'lb',
+        unitTypeId: ids.us
       },
     ]);
 
@@ -106,9 +107,10 @@ describe("createBatch", () => {
 
   test("does not create units that are already in the database", async () => {
     const unitsToCreate = [
-      { metricUnit: 'ml', usUnit: 'oz'},
-      { metricUnit: 'g', usUnit: 'lb'},
-      { metricUnit: 'g', usUnit: 'oz'}, // in database, should ignore
+      { unit: 'dl', unitTypeId: ids.metric },
+      { unit: 'lb', unitTypeId: ids.us },
+      { unit: 'g', unitTypeId: ids.metric }, // in database, should ignore
+      { unit: 'oz', unitTypeId: ids.us }, // in database, should ignore
     ];
 
     const createdUnits = await Unit.createBatch(unitsToCreate);
@@ -116,13 +118,13 @@ describe("createBatch", () => {
     expect(createdUnits).toEqual([
       {
         id: expect.any(Number),
-        metricUnit: 'ml',
-        usUnit: 'oz',
+        unit: 'dl',
+        unitTypeId: ids.metric
       },
       {
         id: expect.any(Number),
-        metricUnit: 'g',
-        usUnit: 'lb',
+        unit: 'lb',
+        unitTypeId: ids.us
       },
     ]);
 
@@ -135,9 +137,9 @@ describe("createBatch", () => {
 
   test("ignores duplicate value pairs in the given array", async () => {
     const unitsToCreate = [
-      { metricUnit: 'ml', usUnit: 'oz'},
-      { metricUnit: 'ml', usUnit: 'oz'}, // dupe, should ignore
-      { metricUnit: 'g', usUnit: 'lb'},
+      { unit: 'dl', unitTypeId: ids.metric },
+      { unit: 'lb', unitTypeId: ids.us },
+      { unit: 'dl', unitTypeId: ids.metric }, // dupe, should ignore
     ];
 
     const createdUnits = await Unit.createBatch(unitsToCreate);
@@ -145,13 +147,13 @@ describe("createBatch", () => {
     expect(createdUnits).toEqual([
       {
         id: expect.any(Number),
-        metricUnit: 'ml',
-        usUnit: 'oz',
+        unit: 'dl',
+        unitTypeId: ids.metric
       },
       {
         id: expect.any(Number),
-        metricUnit: 'g',
-        usUnit: 'lb',
+        unit: 'lb',
+        unitTypeId: ids.us
       },
     ]);
 

@@ -15,6 +15,13 @@
 
 class Instruction {
 
+  static PUBLIC_FIELDS = `
+    id,
+    recipe_id AS "recipeId",
+    ordinal,
+    step
+  `
+
   /**
    * Create a new instruction(s) and 
    * add to the end of the given recipe's instructions.
@@ -54,10 +61,7 @@ class Instruction {
       INSERT INTO instructions
       (recipe_id, ordinal, step) 
       VALUES ($1, $2, $3)
-      RETURNING id,
-                recipe_id AS "recipeId", 
-                ordinal, 
-                step 
+      RETURNING ${this.PUBLIC_FIELDS}
     `, [recipeId, order, step]);
 
     const instruction = result.rows[0];
@@ -82,11 +86,26 @@ class Instruction {
         INSERT INTO instructions
         (step, ordinal, recipe_id) 
         VALUES ($1, $2, $3)
-        RETURNING id, ordinal, step, recipe_id AS "recipeId"
+        RETURNING ${this.PUBLIC_FIELDS}
       `, [text, i + startingOrder, recipeId]);
     }));
 
     return instructions.map(i => i.rows[0]);
+  }
+
+  /**
+   * Returns an array of instruction objects for the given recipe.
+   * @param {Number} recipeId 
+   * @returns {Promise<array>} instructions - [{ id, recipeId, ordinal, step }, ...]
+   */
+  static async getAll(recipeId) {
+    const instructions = (await db.query(`
+      SELECT ${this.PUBLIC_FIELDS}
+      FROM instructions
+      WHERE recipe_id = $1
+    `, [recipeId])).rows;
+
+    return instructions;
   }
 
 
@@ -110,6 +129,44 @@ class Instruction {
   }
 
   /**
+   * Update one or more instructions for the given recipe.
+   * @param {Number} id - recipe or instruction id 
+   * @param {*} data - object or array of objects 
+   * @returns 
+   */
+  static async update(id, data) {
+    
+    if (Array.isArray(data)) {
+      return this._updateMultiple(id, data);
+    } else {
+      return this._updateSingle(id, data);
+    }
+  }
+
+  /**
+   * Update a single instruction. 
+   * @param {Number} id - instruction id 
+   * @param {Object} data - can include { ordinal, step }
+   * @returns instruction - { id, recipeId, ordinal, step }
+   * @throws {NotFoundError} Thrown if instruction not found.
+   */
+  static async _updateSingle(id, data) {
+    const { setCols, values } = sqlForPartialUpdate(data, {});
+    const idIdx = '$' + (values.length + 1);
+
+    const instruction = (await db.query(`
+      UPDATE instructions
+      SET ${setCols}
+      WHERE id = ${idIdx}
+      RETURNING ${this.PUBLIC_FIELDS}
+    `, [...values, id])).rows[0];
+
+    if (!instruction) throw new NotFoundError(`No instruction with id ${id}`);
+
+    return instruction;
+  }
+
+  /**
    * Update instructions for the given recipe.
    * 
    * @pre Recipe exists in the database.
@@ -117,8 +174,7 @@ class Instruction {
    * @param {Array<string>} instructions - [step1, step2, ...] 
    * @return {Promise<array>} instructions - [{ id, recipeId, ordinal, step }, ...]
    */
-  static async update(recipeId, instructions) {
-    
+  static async _updateMultiple(recipeId, instructions) {
     const { 
       createdInstructions, 
       instructionsToUpdate 
@@ -129,7 +185,7 @@ class Instruction {
         UPDATE instructions
         SET step = $1 
         WHERE recipe_id = $3 AND ordinal = $2
-        RETURNING id, recipe_id AS "recipeId", ordinal, step
+        RETURNING ${this.PUBLIC_FIELDS}
       `, [step, i + 1, recipeId])
     }))).map(i => i.rows[0]);
 
@@ -192,7 +248,7 @@ class Instruction {
       RETURNING id
     `, [id]);
 
-    if (!instructionRes.rows[0]) throw new NotFoundError('Instruction not found');
+    if (!instructionRes.rows[0]) throw new NotFoundError(`Instruction with id ${id} not found`);
   }
 
   

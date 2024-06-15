@@ -23,23 +23,22 @@ CREATE TABLE recipes (
   is_favorite BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE units (
-  id SERIAL PRIMARY KEY,
-  metric_unit VARCHAR(20) NOT NULL,
-  us_unit VARCHAR(20) NOT NULL,
-  UNIQUE (metric_unit, us_unit)
-);
-
 CREATE TABLE ingredients (
   id SERIAL PRIMARY KEY,
   recipe_id INTEGER NOT NULL
     REFERENCES recipes ON DELETE CASCADE,
-  unit_id INTEGER NOT NULL
-    REFERENCES units ON DELETE CASCADE,
   label TEXT NOT NULL,
-  ordinal SMALLINT NOT NULL CHECK (ordinal > 0),
-  metric_amount NUMERIC NOT NULL CHECK (metric_amount > 0),
-  us_amount NUMERIC NOT NULL CHECK (us_amount > 0)
+  base_food TEXT, 
+  ordinal SMALLINT NOT NULL CHECK (ordinal > 0)
+);
+
+CREATE TABLE ingredient_measures (
+  ingredient_id INTEGER NOT NULL
+    REFERENCES ingredients ON DELETE CASCADE,
+  amount NUMERIC NOT NULL CHECK (amount > 0),
+  unit VARCHAR(20) NOT NULL, 
+  unit_type VARCHAR(10) NOT NULL,
+  PRIMARY KEY (ingredient_id, unit_type)
 );
 
 CREATE TABLE instructions (
@@ -61,9 +60,9 @@ CREATE TABLE categories (
 );
 
 CREATE TABLE recipes_categories (
-  recipe_id INTEGER
+  recipe_id INTEGER NOT NULL
     REFERENCES recipes ON DELETE CASCADE,
-  category_id INTEGER
+  category_id INTEGER NOT NULL
     REFERENCES categories ON DELETE CASCADE,
   PRIMARY KEY (recipe_id, category_id)
 );
@@ -82,25 +81,27 @@ BEFORE UPDATE ON recipes
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
--- CREATE OR REPLACE FUNCTION trigger_update_recipe_timestamp()
--- RETURNS TRIGGER AS $$
--- BEGIN
---   UPDATE recipes 
---   SET edited_at = NOW()
---   WHERE id = NEW.recipe_id;
---   RETURN NEW;
--- END;
--- $$ LANGUAGE plpgsql;
+/**
+CREATE OR REPLACE FUNCTION trigger_update_recipe_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE recipes 
+  SET edited_at = NOW()
+  WHERE id = NEW.recipe_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
--- CREATE TRIGGER update_recipe_after_ingredient
--- AFTER UPDATE ON ingredients
--- FOR EACH ROW
--- EXECUTE PROCEDURE trigger_update_recipe_timestamp();
+CREATE TRIGGER update_recipe_after_ingredient
+AFTER UPDATE ON ingredients
+FOR EACH ROW
+EXECUTE PROCEDURE trigger_update_recipe_timestamp();
 
--- CREATE TRIGGER update_recipe_after_instruction
--- AFTER UPDATE ON instructions
--- FOR EACH ROW
--- EXECUTE PROCEDURE  trigger_update_recipe_timestamp();
+CREATE TRIGGER update_recipe_after_instruction
+AFTER UPDATE ON instructions
+FOR EACH ROW
+EXECUTE PROCEDURE  trigger_update_recipe_timestamp();
+**/
 
 CREATE OR REPLACE FUNCTION trigger_set_default_categories()
 RETURNS TRIGGER AS $$

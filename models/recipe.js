@@ -15,38 +15,23 @@
 const Ingredient = require('./ingredient');
 const Instruction = require('./instruction');
 const Category = require('./category');
-const Unit = require('./unit');
 
 class Recipe {
 
-  static get publicFields() {
-    return `id, 
-            username, 
-            title, 
-            url, 
-            source_name AS "sourceName",
-            image, 
-            servings, 
-            notes,
-            edited_at AS "editedAt",
-            created_at AS "createdAt",
-            is_favorite AS "isFavorite"
-            `;
-  }
-
-  // extract recipe info from api
-  // const { 
-  //   title,
-  //   servings,
-  //   sourceUrl,
-  //   image,
-  //   ingredients,
-  //   instructions,
-  //   cuisines,
-  //   diets,
-  //   courses,
-  //   occasions
-  // } = await extractRecipeInfo(url);
+  static PUBLIC_FIELDS = 
+   `id, 
+    username, 
+    title, 
+    url, 
+    source_name AS "sourceName",
+    image, 
+    servings, 
+    notes,
+    edited_at AS "editedAt",
+    created_at AS "createdAt",
+    is_favorite AS "isFavorite"
+  `;
+  
 
   /**
    * Create a recipe.
@@ -65,26 +50,29 @@ class Recipe {
       INSERT INTO recipes
       (title, url, source_name, image, servings, username)
       VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING ${Recipe.publicFields}
+      RETURNING ${this.PUBLIC_FIELDS}
     `, [title, sourceUrl, sourceName, image, servings, username])).rows[0];
 
     // create units if necessary
-    const unitValues = ingredients.map(({ metricUnit, usUnit }) => ({ metricUnit, usUnit }));
-    await Unit.createBatch(unitValues);
+
+    // const metricUnits = ingredients.map(({ metricUnit }) => ({ metricUnit }));
+    // const usUnits = ingredients.map(({ usUnit }) => ({ usUnit }));
+    // await Unit.createBatch([...metricUnits, ...usUnits]);
     
     // get array of unit ids
-    const unitIds = await Unit.getIds(unitValues);
+    // const metricUnitIds = await Unit.getIds(metricUnits);
+    // const usUnitIds = await Unit.getIds(usUnits);
 
     // add 'unitId' prop to each ingredient obj
-    const ingredientsWithUnitIds = ingredients.map(({ label, usAmount, metricAmount }, i) => {
-      return { label, usAmount, metricAmount, unitId: unitIds[i] };
-    });
+    // const ingredientsWithUnitIds = ingredients.map(({ label, measures }, i) => {
+    //   return { label, usAmount, metricAmount, usUnit, metricUnit };
+    // });
 
     // create instructions 
     recipe.instructions = await Instruction.create(recipe.id, instructions);
 
     // create ingredients 
-    recipe.ingredients = await Ingredient.create(recipe.id, ingredientsWithUnitIds);
+    recipe.ingredients = await Ingredient.create(recipe.id, ingredients);
    
     // get default category ids for user
     // must be in order: cuisines, diets, courses, occasions
@@ -102,57 +90,40 @@ class Recipe {
     return recipe;
   }
 
-  static async _getInstructions(recipeId) {
-    const instructions = await db.query(`
-      SELECT id,
-             recipe_id AS "recipeId", 
-             ordinal, 
-             step 
-      FROM instructions
-      WHERE recipe_id = $1
-      ORDER BY ordinal
-    `, [recipeId]);
-    return instructions.rows;
-  }
-
-  static async _getIngredients(recipeId) {
-    const ingredients = await db.query(`
-      SELECT id,
-            recipe_id AS "recipeId", 
-            unit_id AS "unitId", 
-            label, 
-            ordinal, 
-            metric_amount AS "metricAmount", 
-            us_amount AS "usAmount"
-      FROM ingredients
-      WHERE recipe_id = $1
-      ORDER BY ordinal
-    `, [recipeId]);
-    return ingredients.rows;
-  }
+  // static async _getInstructions(recipeId) {
+  //   const instructions = await db.query(`
+  //     SELECT ${Instruction.PUBLIC_FIELDS}
+  //     FROM instructions
+  //     WHERE recipe_id = $1
+  //     ORDER BY ordinal
+  //   `, [recipeId]);
+  //   return instructions.rows;
+  // }
 
   /**
    * Get a recipe from its id.
    * 
-   * @param {Number} recipeId
+   * @param {Number} id
    * @returns {Promise<object>} recipe - { id, title, url, image, 
    *                                       servings, notes, isFavorite
    *                                       editedAt, createdAt, ingredients,
    *                                       instructions } 
    * @throws {NotFoundError} Recipe must exist in the database.
    */
-  static async get(username, recipeId) {
+  static async get(id) {
 
     const recipe = (await db.query(`
-      SELECT ${Recipe.publicFields}
+      SELECT ${this.PUBLIC_FIELDS}
       FROM recipes
-      WHERE id = $1 AND username = $2
-    `, [recipeId, username])).rows[0];
+      WHERE id = $1 
+    `, [id])).rows[0];
+
+    console.log('recipe', recipe)
 
     if (!recipe) throw new NotFoundError('Recipe not found.')
 
-    recipe.instructions = await this._getInstructions(recipeId)
-    recipe.ingredients = await this._getIngredients(recipeId);
+    recipe.instructions = await Instruction.getAll(id)
+    recipe.ingredients = await Ingredient.getAll(id);
     // recipe.categories = await this._getCategories(recipeId);
 
     return recipe;
@@ -269,18 +240,18 @@ class Recipe {
    * Sets the is_favorite column for the recipe from: is_favorite => !is_favorite
    * 
    * @param {String} username 
-   * @param {Number} recipeId 
+   * @param {Number} id 
    * @post is_favorite column is updated from: is_favorite => !is_favorite
    */ 
-  static async toggleFavorite(username, recipeId) {
+  static async toggleFavorite(id) {
     
 
     const recipe = (await db.query(`
       SELECT id, is_favorite FROM recipes
-      WHERE id = $1 AND username = $2
-    `, [recipeId, username])).rows[0];
+      WHERE id = $1 
+    `, [id])).rows[0];
 
-    if (!recipe) throw new NotFoundError(`Recipe id ${recipeId} could not be found for ${username}`);
+    if (!recipe) throw new NotFoundError(`Recipe id ${id} could not be found.`);
 
     const isFavorite = recipe.is_favorite;
 
@@ -295,15 +266,17 @@ class Recipe {
   /**
    * Update the given recipe.
    * 
-   * @param {Number} recipeId 
+   * @param {Number} id 
    * @param {Object} data - can include { title, url, sourceName, image, servings, notes, instructions, ingredients }
    *                        instructions: [step1, step2, ...]
-   *                        ingredients: [{ id, usAmount, metricAmount }, ...]
+   *                        ingredients: [{ id, data }, ...]
+   *                          data: { label, baseFood, ordinal, measure }
+   *                          measure: { unitType, measureData: { amount, unit } }
    * @returns {Promise<object>} updatedRecipe - { id, username, title, url, sourceName, image, servings, notes, 
    *                                              editedAt, createdAt, isFavorite, ingredients, instructions }
    * @throws {BadRequestError} Data must be provided for update.
    */
-  static async update(username, recipeId, data) {
+  static async update(id, data) {
     if (!Object.keys(data).length) throw new BadRequestError('No data was provided for recipe update.');
 
     // delete instructions and ingredients prop, so they aren't
@@ -319,22 +292,21 @@ class Recipe {
       const jsToSql = { sourceName: 'source_name' };
       const { setCols, values } = sqlForPartialUpdate(data, jsToSql);
       const recipeIdx = '$' + (values.length + 1);
-      const usernameIdx = '$' + (values.length + 2);
 
       recipeResult = await db.query(`
         UPDATE recipes
         SET ${setCols}
-        WHERE id = ${recipeIdx} AND username = ${usernameIdx}
-        RETURNING ${this.publicFields}
-      `, [...values, recipeId, username]);
+        WHERE id = ${recipeIdx} 
+        RETURNING ${this.PUBLIC_FIELDS}
+      `, [...values, id]);
 
     } else { // only updating instructions and/or ingredients, update edited_at
       recipeResult = await db.query(`
         UPDATE recipes
         SET edited_at = (to_timestamp(${Date.now()} / 1000.0))
-        WHERE id = $1 AND username = $2
-        RETURNING ${this.publicFields}
-      `, [recipeId, username]);
+        WHERE id = $1 
+        RETURNING ${this.PUBLIC_FIELDS}
+      `, [id]);
     }
 
     const recipe = recipeResult.rows[0];
@@ -342,13 +314,13 @@ class Recipe {
 
     // update instructions
     recipe.instructions = instructions && instructions.length ? 
-     await Instruction.update(recipeId, instructions) :
-     await this._getInstructions(recipeId);
+     await Instruction.update(id, instructions) :
+     await Instruction.getAll(id);
 
     // update ingredients
     recipe.ingredients = ingredients && ingredients.length ?
-      await Ingredient.updateAmounts(ingredients) :
-      await this._getIngredients(recipeId);
+      await Ingredient.update(ingredients) :
+      await Ingredient.getAll(id);
 
     return recipe;
   }
@@ -357,17 +329,17 @@ class Recipe {
    * Remove the given recipe from the database.
    * 
    * @param {String} username
-   * @param {Number} recipeId
+   * @param {Number} id
    * @throws {NotFoundError} Recipe must exist.
    */
-  static async remove(username, recipeId) {
+  static async remove(id) {
 
     const recipe = (await db.query(`
       DELETE
       FROM recipes
-      WHERE id = $1 AND username = $2
+      WHERE id = $1 
       RETURNING id
-    `, [recipeId, username])).rows[0];
+    `, [id])).rows[0];
 
     if (!recipe) throw new NotFoundError('Recipe not found.')
   }

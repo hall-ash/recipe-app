@@ -226,28 +226,64 @@ describe("GET /users/:username/recipes/:id ", () => {
             id: expect.any(Number),
             ordinal: 1,
             recipeId: ids.recipe,
-            unitId: expect.any(Number),
             label: 'chicken',
-            usAmount: '1.5',
-            metricAmount: '680.389',
+            baseFood: expect.any(String),
+            measures: {
+              metric: {
+                ingredientId: expect.any(Number),
+                amount: expect.any(String),
+                unit: expect.any(String),
+                unitType: 'metric',
+              },
+              us: {
+                ingredientId: expect.any(Number),
+                amount: expect.any(String),
+                unit: expect.any(String),
+                unitType: 'us',
+              }
+            }
           },
           {
             id: expect.any(Number),
             ordinal: 2,
             recipeId: ids.recipe,
-            unitId: expect.any(Number),
             label: 'sauce',
-            usAmount: '0.333',
-            metricAmount: '78.863',
+            baseFood: expect.any(String),
+            measures: {
+              metric: {
+                ingredientId: expect.any(Number),
+                amount: expect.any(String),
+                unit: expect.any(String),
+                unitType: 'metric',
+              },
+              us: {
+                ingredientId: expect.any(Number),
+                amount: expect.any(String),
+                unit: expect.any(String),
+                unitType: 'us',
+              }
+            }
           },
           {
             id: expect.any(Number),
             ordinal: 3,
             recipeId: ids.recipe,
-            unitId: expect.any(Number),
             label: 'honey',
-            usAmount: '0.333',
-            metricAmount: '78.863',
+            baseFood: expect.any(String),
+            measures: {
+              metric: {
+                ingredientId: expect.any(Number),
+                amount: expect.any(String),
+                unit: expect.any(String),
+                unitType: 'metric',
+              },
+              us: {
+                ingredientId: expect.any(Number),
+                amount: expect.any(String),
+                unit: expect.any(String),
+                unitType: 'us',
+              }
+            }
           },
         ],
       }
@@ -297,28 +333,64 @@ describe("GET /users/:username/recipes/:id ", () => {
             id: expect.any(Number),
             ordinal: 1,
             recipeId: ids.recipe,
-            unitId: expect.any(Number),
             label: 'chicken',
-            usAmount: '1.5',
-            metricAmount: '680.389',
+            baseFood: expect.any(String),
+            measures: {
+              metric: {
+                ingredientId: expect.any(Number),
+                amount: expect.any(String),
+                unit: expect.any(String),
+                unitType: 'metric',
+              },
+              us: {
+                ingredientId: expect.any(Number),
+                amount: expect.any(String),
+                unit: expect.any(String),
+                unitType: 'us',
+              }
+            }
           },
           {
             id: expect.any(Number),
             ordinal: 2,
             recipeId: ids.recipe,
-            unitId: expect.any(Number),
             label: 'sauce',
-            usAmount: '0.333',
-            metricAmount: '78.863',
+            baseFood: expect.any(String),
+            measures: {
+              metric: {
+                ingredientId: expect.any(Number),
+                amount: expect.any(String),
+                unit: expect.any(String),
+                unitType: 'metric',
+              },
+              us: {
+                ingredientId: expect.any(Number),
+                amount: expect.any(String),
+                unit: expect.any(String),
+                unitType: 'us',
+              }
+            }
           },
           {
             id: expect.any(Number),
             ordinal: 3,
             recipeId: ids.recipe,
-            unitId: expect.any(Number),
             label: 'honey',
-            usAmount: '0.333',
-            metricAmount: '78.863',
+            baseFood: expect.any(String),
+            measures: {
+              metric: {
+                ingredientId: expect.any(Number),
+                amount: expect.any(String),
+                unit: expect.any(String),
+                unitType: 'metric',
+              },
+              us: {
+                ingredientId: expect.any(Number),
+                amount: expect.any(String),
+                unit: expect.any(String),
+                unitType: 'us',
+              }
+            }
           },
         ],
       }
@@ -409,28 +481,64 @@ describe("PATCH /users/:username/recipes/:id", () => {
         id: expect.any(Number),
         ordinal: 1,
         recipeId: expect.any(Number),
-        unitId: expect.any(Number),
         label: 'chicken',
-        usAmount: '1.5',
-        metricAmount: '680.389',
+        baseFood: expect.any(String),
+        measures: {
+          metric: {
+            ingredientId: expect.any(Number),
+            amount: expect.any(String),
+            unit: expect.any(String),
+            unitType: 'metric',
+          },
+          us: {
+            ingredientId: expect.any(Number),
+            amount: expect.any(String),
+            unit: expect.any(String),
+            unitType: 'us',
+          }
+        }
       },
       {
         id: expect.any(Number),
         ordinal: 2,
         recipeId: expect.any(Number),
-        unitId: expect.any(Number),
         label: 'sauce',
-        usAmount: '0.333',
-        metricAmount: '78.863',
+        baseFood: expect.any(String),
+        measures: {
+          metric: {
+            ingredientId: expect.any(Number),
+            amount: expect.any(String),
+            unit: expect.any(String),
+            unitType: 'metric',
+          },
+          us: {
+            ingredientId: expect.any(Number),
+            amount: expect.any(String),
+            unit: expect.any(String),
+            unitType: 'us',
+          }
+        }
       },
       {
         id: expect.any(Number),
         ordinal: 3,
         recipeId: expect.any(Number),
-        unitId: expect.any(Number),
         label: 'honey',
-        usAmount: '0.333',
-        metricAmount: '78.863',
+        baseFood: expect.any(String),
+        measures: {
+          metric: {
+            ingredientId: expect.any(Number),
+            amount: expect.any(String),
+            unit: expect.any(String),
+            unitType: 'metric',
+          },
+          us: {
+            ingredientId: expect.any(Number),
+            amount: expect.any(String),
+            unit: expect.any(String),
+            unitType: 'us',
+          }
+        }
       },
     ],
   }};

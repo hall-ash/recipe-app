@@ -44,82 +44,13 @@ beforeAll(async () => {
 
 });
 
-/************************************** _getIngredients */
-describe("_getIngredients", () => {
-
-  test("returns the ingredients for the given recipe", async () => {
-    const ingredients = await Recipe._getIngredients(ids.recipe);
-
-    expect(ingredients).toEqual(
-      [
-        {
-          id: expect.any(Number),
-          recipeId: ids.recipe,
-          unitId: ids.unit,
-          label: 'ingredient 1',
-          ordinal: 1,
-          metricAmount: '200',
-          usAmount: '8',
-        },
-        {
-          id: expect.any(Number),
-          recipeId: ids.recipe,
-          unitId: ids.unit,
-          label: 'ingredient 2',
-          ordinal: 2,
-          metricAmount: '200',
-          usAmount: '8',
-        },
-        {
-          id: expect.any(Number),
-          recipeId: ids.recipe,
-          unitId: ids.unit,
-          label: 'ingredient 3',
-          ordinal: 3,
-          metricAmount: '200',
-          usAmount: '8',
-        },
-      ],
-    );
-
-  });
-});
-
-/************************************** _getInstructions */
-describe("_getInstructions", () => {
-
-  test("returns the instructions for the given recipe", async () => {
-    const instructions = await Recipe._getInstructions(ids.recipe);
-
-    expect(instructions).toEqual([
-      {
-        id: expect.any(Number),
-        recipeId: ids.recipe,
-        ordinal: 1,
-        step: 'step 1',
-      },
-      {
-        id: expect.any(Number),
-        recipeId: ids.recipe,
-        ordinal: 2,
-        step: 'step 2',
-      },
-      {
-        id: expect.any(Number),
-        recipeId: ids.recipe,
-        ordinal: 3,
-        step: 'step 3',
-      },
-    ]);
-
-  });
-});
 
 /************************************** get */
+
 describe("get", () => {
   test("returns the recipe object given its id", async () => {
 
-    const recipe = await Recipe.get(ids.users[0], ids.recipe);
+    const recipe = await Recipe.get(ids.recipe);
 
     expect(recipe).toEqual({
       id: ids.recipe,
@@ -157,29 +88,65 @@ describe("get", () => {
         {
           id: expect.any(Number),
           recipeId: ids.recipe,
-          unitId: ids.unit,
           label: 'ingredient 1',
+          baseFood: null,
           ordinal: 1,
-          metricAmount: '200',
-          usAmount: '8',
+          measures: {
+            metric: {
+              ingredientId: expect.any(Number),
+              amount: '200',
+              unit: 'g',
+              unitType: 'metric'
+            },
+            us: {
+              ingredientId: expect.any(Number),
+              amount: '8',
+              unit: 'oz',
+              unitType: 'us'
+            },
+          },
         },
         {
           id: expect.any(Number),
           recipeId: ids.recipe,
-          unitId: ids.unit,
           label: 'ingredient 2',
+          baseFood: null,
           ordinal: 2,
-          metricAmount: '200',
-          usAmount: '8',
+          measures: {
+            metric: {
+              ingredientId: expect.any(Number),
+              amount: '200',
+              unit: 'g',
+              unitType: 'metric'
+            },
+            us: {
+              ingredientId: expect.any(Number),
+              amount: '8',
+              unit: 'oz',
+              unitType: 'us'
+            },
+          },
         },
         {
           id: expect.any(Number),
           recipeId: ids.recipe,
-          unitId: ids.unit,
           label: 'ingredient 3',
+          baseFood: null,
           ordinal: 3,
-          metricAmount: '200',
-          usAmount: '8',
+          measures: {
+            metric: {
+              ingredientId: expect.any(Number),
+              amount: '200',
+              unit: 'g',
+              unitType: 'metric'
+            },
+            us: {
+              ingredientId: expect.any(Number),
+              amount: '8',
+              unit: 'oz',
+              unitType: 'us'
+            },
+          },
         },
       ],
     });
@@ -188,19 +155,12 @@ describe("get", () => {
 
   test("throws NotFoundError if recipe is not in database", async () => {
     try {
-      await Recipe.get(ids.users[0], -1);
+      await Recipe.get(-1);
     } catch(err) {
       expect(err).toBeInstanceOf(NotFoundError);
     }
   });
 
-  test("throws NotFoundError if username not in database", async () => {
-    try {
-      await Recipe.get(-1, ids.recipe);
-    } catch(err) {
-      expect(err).toBeInstanceOf(NotFoundError);
-    }
-  })
 });
 
 /************************************** create */
@@ -221,24 +181,51 @@ describe("create", () => {
     ingredients: [
       {
         label: 'chicken',
-        usAmount: 1.5,
-        usUnit: 'lb',
-        metricAmount: 680.389,
-        metricUnit: 'g'
+        baseFood: 'chicken',
+        measures: [
+          {
+            amount: 1.5,
+            unit: 'lb',
+            unitType: 'us',
+          },
+          {
+            amount: 680.389,
+            unit: 'g',
+            unitType: 'metric',
+          },
+        ]
       },
       {
         label: 'sauce',
-        usAmount: 0.333,
-        usUnit: 'cups',
-        metricAmount: 78.863,
-        metricUnit: 'ml'
+        baseFood: 'sauce',
+        measures: [
+          {
+            amount: 0.333,
+            unit: 'cups',
+            unitType: 'us',
+          },
+          {
+            amount: 78.863,
+            unit: 'ml',
+            unitType: 'metric',
+          },
+        ]
       },
       {
         label: 'honey',
-        usAmount: 0.333,
-        usUnit: 'cups',
-        metricAmount: 78.863,
-        metricUnit: 'ml'
+        baseFood: 'honey',
+        measures: [
+          {
+            amount: 0.333,
+            unit: 'cups',
+            unitType: 'us',
+          },
+          {
+            amount: 78.863,
+            unit: 'ml',
+            unitType: 'metric',
+          },
+        ]
       },
     ],
     cuisines: [],
@@ -247,7 +234,7 @@ describe("create", () => {
     occasions: [],
   }
 
-  test("adds the recipe created from the given url to the database and returns a recipe object", async () => {
+  test("creates a recipe and returns a recipe object", async () => {
     const recipe = await Recipe.create(ids.users[0], recipeData);
     
     expect(recipe).toEqual({
@@ -292,29 +279,65 @@ describe("create", () => {
         {
           id: expect.any(Number),
           recipeId: expect.any(Number),
-          unitId: expect.any(Number),
           ordinal: 1,
           label: 'chicken',
-          usAmount: '1.5',
-          metricAmount: '680.389',
+          baseFood: 'chicken',
+          measures: {
+            us: {
+              ingredientId: expect.any(Number),
+              amount: '1.5',
+              unit: 'lb',
+              unitType: 'us',
+            },
+            metric: {
+              ingredientId: expect.any(Number),
+              amount: '680.389',
+              unit: 'g',
+              unitType: 'metric',
+            },
+          }
         },
         {
           id: expect.any(Number),
           recipeId: expect.any(Number),
-          unitId: expect.any(Number),
           ordinal: 2,
           label: 'sauce',
-          usAmount: '0.333',
-          metricAmount: '78.863',
+          baseFood: 'sauce',
+          measures: {
+            us: {
+              ingredientId: expect.any(Number),
+              amount:'0.333',
+              unit: 'cups',
+              unitType: 'us',
+            },
+            metric: {
+              ingredientId: expect.any(Number),
+              amount: '78.863',
+              unit: 'ml',
+              unitType: 'metric',
+            },
+          },
         },
         {
           id: expect.any(Number),
           recipeId: expect.any(Number),
-          unitId: expect.any(Number),
           ordinal: 3,
           label: 'honey',
-          usAmount: '0.333',
-          metricAmount: '78.863',
+          baseFood: 'honey',
+          measures: {
+            us: {
+              ingredientId: expect.any(Number),
+              amount:'0.333',
+              unit: 'cups',
+              unitType: 'us',
+            },
+            metric: {
+              ingredientId: expect.any(Number),
+              amount: '78.863',
+              unit: 'ml',
+              unitType: 'metric',
+            },
+          },
         },
       ],
     })
@@ -337,7 +360,7 @@ describe("update", () => {
     const data = {
       title: 'new title',
     }
-    const updatedRecipe = await Recipe.update(ids.users[0], ids.recipe, data);
+    const updatedRecipe = await Recipe.update(ids.recipe, data);
 
     expect(updatedRecipe.editedAt).toEqual(expect.any(Date));
     expect(updatedRecipe.createdAt).toEqual(recipe.created_at); // check that created at remains unchanged
@@ -356,7 +379,7 @@ describe("update", () => {
       notes: 'new recipe notes',
     };
 
-    const updatedRecipe = await Recipe.update(ids.users[0], ids.recipe, data);
+    const updatedRecipe = await Recipe.update(ids.recipe, data);
   
     expect(updatedRecipe).toEqual({
       id: ids.recipe,
@@ -374,29 +397,65 @@ describe("update", () => {
         {
           id: ids.ingredients[0],
           recipeId: ids.recipe,
-          unitId: ids.unit,
           label: 'ingredient 1',
+          baseFood: null,
           ordinal: 1,
-          metricAmount: '200',
-          usAmount: '8',
+          measures: {
+            us: {
+              ingredientId: ids.ingredients[0],
+              amount: '8',
+              unit: 'oz',
+              unitType: 'us',
+            },
+            metric: {
+              ingredientId: ids.ingredients[0],
+              amount: '200',
+              unit: 'g',
+              unitType: 'metric',
+            },
+          },
         },
         {
           id: ids.ingredients[1],
           recipeId: ids.recipe,
-          unitId: ids.unit,
           label: 'ingredient 2',
+          baseFood: null,
           ordinal: 2,
-          metricAmount: '200',
-          usAmount: '8',
+          measures: {
+            us: {
+              ingredientId: ids.ingredients[1],
+              amount: '8',
+              unit: 'oz',
+              unitType: 'us',
+            },
+            metric: {
+              ingredientId: ids.ingredients[1],
+              amount: '200',
+              unit: 'g',
+              unitType: 'metric',
+            },
+          },
         },
         {
           id: ids.ingredients[2],
           recipeId: ids.recipe,
-          unitId: ids.unit,
           label: 'ingredient 3',
+          baseFood: null,
           ordinal: 3,
-          metricAmount: '200',
-          usAmount: '8',
+          measures: {
+            us: {
+              ingredientId: ids.ingredients[2],
+              amount: '8',
+              unit: 'oz',
+              unitType: 'us',
+            },
+            metric: {
+              ingredientId: ids.ingredients[2],
+              amount: '200',
+              unit: 'g',
+              unitType: 'metric',
+            },
+          },
         },
       ],
       instructions: [
@@ -429,23 +488,41 @@ describe("update", () => {
       ingredients: [
         {
           id: ids.ingredients[0],
-          metricAmount: 1.1,
-          usAmount: 22.22, 
+          data: {
+            label: 'updated label',
+            ordinal: 500,
+            measure: {
+              unitType: 'metric',
+              measureData: {
+                amount: 500,
+                unit: 'kg'
+              }
+            }
+          }
         },
         {
           id: ids.ingredients[1],
-          metricAmount: 333.333,
-          usAmount: 4444.4444,
+          data: {
+            label: 'updated label',
+            ordinal: 999,
+          }
         },
         {
           id: ids.ingredients[2],
-          metricAmount: 55555.55555,
-          usAmount: 666666.666666,
+          data: {
+            measure: {
+              unitType: 'us',
+              measureData: {
+                amount: 11.11,
+                unit: 'gallons'
+              }
+            }
+          }
         },
       ],
     };
 
-    const updatedRecipe = await Recipe.update(ids.users[0], ids.recipe, data);
+    const updatedRecipe = await Recipe.update(ids.recipe, data);
 
     expect(updatedRecipe).toEqual({
       id: ids.recipe,
@@ -463,29 +540,65 @@ describe("update", () => {
         {
           id: ids.ingredients[0],
           recipeId: ids.recipe,
-          unitId: ids.unit,
-          label: 'ingredient 1',
-          ordinal: 1,
-          metricAmount: '1.1',
-          usAmount: '22.22',
+          label: 'updated label',
+          baseFood: null,
+          ordinal: 500,
+          measures: {
+            metric: {
+              ingredientId: ids.ingredients[0],
+              amount: '500',
+              unit: 'kg',
+              unitType: 'metric'
+            },
+            us: {
+              ingredientId: ids.ingredients[0],
+              amount: '8',
+              unit: 'oz',
+              unitType: 'us'
+            }
+          }
         },
         {
           id: ids.ingredients[1],
           recipeId: ids.recipe,
-          unitId: ids.unit,
-          label: 'ingredient 2',
-          ordinal: 2,
-          metricAmount: '333.333',
-          usAmount: '4444.4444',
+          label: 'updated label',
+          baseFood: null,
+          ordinal: 999,
+          measures: {
+            metric: {
+              ingredientId: ids.ingredients[1],
+              amount: '200',
+              unit: 'g',
+              unitType: 'metric'
+            },
+            us: {
+              ingredientId: ids.ingredients[1],
+              amount: '8',
+              unit: 'oz',
+              unitType: 'us'
+            }
+          }
         },
         {
           id: ids.ingredients[2],
           recipeId: ids.recipe,
-          unitId: ids.unit,
           label: 'ingredient 3',
+          baseFood: null,
           ordinal: 3,
-          metricAmount: '55555.55555',
-          usAmount: '666666.666666',
+          measures: {
+            metric: {
+              ingredientId: ids.ingredients[2],
+              amount: '200',
+              unit: 'g',
+              unitType: 'metric'
+            },
+            us: {
+              ingredientId: ids.ingredients[2],
+              amount: '11.11',
+              unit: 'gallons',
+              unitType: 'us'
+            }
+          },
         },
       ],
       instructions: [
@@ -519,7 +632,7 @@ describe("update", () => {
       instructions: ['new step 1', 'new step 2']
     };
 
-    const updatedRecipe = await Recipe.update(ids.users[0], ids.recipe, data);
+    const updatedRecipe = await Recipe.update(ids.recipe, data);
 
     expect(updatedRecipe).toEqual({
       id: ids.recipe,
@@ -537,29 +650,65 @@ describe("update", () => {
         {
           id: expect.any(Number),
           recipeId: ids.recipe,
-          unitId: ids.unit,
           label: 'ingredient 1',
+          baseFood: null,
+          measures: {
+            metric: {
+              amount: '200',
+              ingredientId: expect.any(Number),
+              unit: 'g',
+              unitType: 'metric'
+            },
+            us: {
+              amount: '8',
+              ingredientId: expect.any(Number),
+              unit: 'oz',
+              unitType: 'us'
+            }
+          },
           ordinal: 1,
-          metricAmount: '200',
-          usAmount: '8',
         },
         {
           id: expect.any(Number),
           recipeId: ids.recipe,
-          unitId: ids.unit,
           label: 'ingredient 2',
+          baseFood: null,
+          measures: {
+            metric: {
+              amount: '200',
+              ingredientId: expect.any(Number),
+              unit: 'g',
+              unitType: 'metric'
+            },
+            us: {
+              amount: '8',
+              ingredientId: expect.any(Number),
+              unit: 'oz',
+              unitType: 'us'
+            }
+          },
           ordinal: 2,
-          metricAmount: '200',
-          usAmount: '8',
         },
         {
           id: expect.any(Number),
           recipeId: ids.recipe,
-          unitId: ids.unit,
           label: 'ingredient 3',
+          baseFood: null,
+          measures: {
+            metric: {
+              amount: '200',
+              ingredientId: expect.any(Number),
+              unit: 'g',
+              unitType: 'metric'
+            },
+            us: {
+              amount: '8',
+              ingredientId: expect.any(Number),
+              unit: 'oz',
+              unitType: 'us'
+            }
+          },
           ordinal: 3,
-          metricAmount: '200',
-          usAmount: '8',
         },
       ],
       instructions: [
@@ -591,7 +740,7 @@ describe("remove", () => {
       SELECT * FROM recipes
     `)).rows.length;
 
-    await Recipe.remove(ids.users[0], ids.recipe);
+    await Recipe.remove(ids.recipe);
 
     const totalRecipesAfterRemove = (await db.query(`
       SELECT * FROM recipes
@@ -602,7 +751,7 @@ describe("remove", () => {
 
   test("throws NotFoundError if recipe does not exist in database", async () => {
     try {
-      await Recipe.remove(ids.users[0], -1);
+      await Recipe.remove(-1);
     } catch (err) {
       expect(err).toBeInstanceOf(NotFoundError);
 
@@ -727,7 +876,7 @@ describe("toggleFavorite", () => {
 
     expect(isFavoriteBeforeToggle).toBe(false);
 
-    await Recipe.toggleFavorite(ids.users[0], ids.recipe);
+    await Recipe.toggleFavorite(ids.recipe);
 
     const isFavoriteAfterToggle = (await db.query(`
       SELECT is_favorite FROM recipes
@@ -752,7 +901,7 @@ describe("toggleFavorite", () => {
 
     expect(isFavoriteBeforeToggle).toBe(true);
 
-    await Recipe.toggleFavorite(ids.users[0], ids.recipe);
+    await Recipe.toggleFavorite(ids.recipe);
 
     const isFavoriteAfterToggle = (await db.query(`
       SELECT is_favorite FROM recipes
@@ -764,7 +913,7 @@ describe("toggleFavorite", () => {
 
   test("throws NotFoundError if recipe not found", async () => {
     try {
-      await Recipe.toggleFavorite(ids.users[0], -1);
+      await Recipe.toggleFavorite(-1);
     } catch (e) {
       expect(e).toBeInstanceOf(NotFoundError);
     }

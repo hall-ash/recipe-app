@@ -18,24 +18,24 @@ class Unit {
   /**
    * Create a unit.
    * 
-   * @param {Object} { metricUnit, usUnit }
+   * @param {Object} { unit, unitTypeId }
    * @returns {Promise<Number>} unit - { id, metricUnit, usUnit }
    * @throws {BadRequestError} Thrown if attempting to create duplicate.
    */
-  static async create({ metricUnit, usUnit }) {
+  static async create({ unit, unitTypeId }) {
 
     const unitExists = await db.query(`
-      SELECT * FROM units
-      WHERE metric_unit = $1 
-      AND us_unit = $2
-    `, [metricUnit, usUnit]);
+      SELECT id FROM units
+      WHERE unit = $1 
+      AND us_type_id = $2
+    `, [unit, unitTypeId]);
     if (unitExists.rows[0]) throw new BadRequestError('Unit already exists in database.');
 
     const unit = (await db.query(`
       INSERT INTO units
-      (metric_unit, us_unit) VALUES ($1, $2)
-      RETURNING id, metric_unit AS "metricUnit", us_unit AS "usUnit"
-    `, [metricUnit, usUnit])).rows[0];
+      (unit, unit_type_id) VALUES ($1, $2)
+      RETURNING id, unit, unit_type_id AS "unitTypeId"
+    `, [unit, unitTypeId])).rows[0];
 
     return unit; // return unit 
   }

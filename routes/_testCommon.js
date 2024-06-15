@@ -6,9 +6,6 @@ const _ = require('lodash');
 const User = require("../models/user");
 const Recipe = require("../models/recipe");
 const Category = require("../models/category");
-const Unit = require("../models/unit");
-const Ingredient = require("../models/ingredient");
-const Instruction = require("../models/instruction");
 
 const { createToken } = require("../helpers/tokens");
 
@@ -21,9 +18,8 @@ async function commonBeforeAll() {
   const tables = [
     'users', 
     'recipes', 
-    'units',
     'ingredients', 
-    'instructions', 
+    'ingredient_measures', 
     'categories',
     'recipes_categories',
   ];
@@ -58,24 +54,51 @@ async function commonBeforeAll() {
     ingredients: [
       {
         label: 'chicken',
-        usAmount: 1.5,
-        usUnit: 'lb',
-        metricAmount: 680.389,
-        metricUnit: 'g'
+        baseFood: 'chicken',
+        measures: [
+          {
+            amount: 1.5,
+            unit: 'lb',
+            unitType: 'us',
+          },
+          {
+            amount: 680.389,
+            unit: 'g',
+            unitType: 'metric',
+          },
+        ]
       },
       {
         label: 'sauce',
-        usAmount: 0.333,
-        usUnit: 'cups',
-        metricAmount: 78.863,
-        metricUnit: 'ml'
+        baseFood: 'sauce',
+        measures: [
+          {
+            amount: 0.333,
+            unit: 'cups',
+            unitType: 'us',
+          },
+          {
+            amount: 78.863,
+            unit: 'ml',
+            unitType: 'metric',
+          },
+        ]
       },
       {
         label: 'honey',
-        usAmount: 0.333,
-        usUnit: 'cups',
-        metricAmount: 78.863,
-        metricUnit: 'ml'
+        baseFood: 'honey',
+        measures: [
+          {
+            amount: 0.333,
+            unit: 'cups',
+            unitType: 'us',
+          },
+          {
+            amount: 78.863,
+            unit: 'ml',
+            unitType: 'metric',
+          },
+        ]
       },
     ],
     cuisines: [],

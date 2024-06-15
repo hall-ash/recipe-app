@@ -11,8 +11,8 @@ async function commonBeforeAll() {
   const tables = [
     'users', 
     'recipes', 
-    'units',
     'ingredients', 
+    'ingredient_measures',
     'instructions', 
     'categories',
     'recipes_categories',
@@ -43,24 +43,27 @@ async function commonBeforeAll() {
   `, [ids.users[0]]);
   ids.recipe = recipe.rows[0].id;
 
-  // add a unit for the ingredients
-  const unit = await db.query(`
-    INSERT INTO units
-    (metric_unit, us_unit)
-    VALUES ('g', 'oz')
-    RETURNING id
-  `);
-  ids.unit = unit.rows[0].id;
-
    // add ingredients
   ids.ingredients = (await db.query(`
     INSERT INTO ingredients
-    (recipe_id, unit_id, label, ordinal, metric_amount, us_amount)
-    VALUES ($1, $2, 'ingredient 1', 1, 200, 8),
-          ($1, $2, 'ingredient 2', 2, 200, 8),
-          ($1, $2, 'ingredient 3', 3, 200, 8)
+    (recipe_id, label, ordinal)
+    VALUES ($1, 'ingredient 1', 1),
+          ($1, 'ingredient 2', 2),
+          ($1, 'ingredient 3', 3)
     RETURNING id
- `, [ids.recipe, ids.unit])).rows.map(i => i.id);
+ `, [ids.recipe])).rows.map(i => i.id);
+
+  // add ingredient_measures
+  await db.query(`
+    INSERT INTO ingredient_measures
+    (ingredient_id, amount, unit, unit_type)
+    VALUES ($1, 200, 'g', 'metric'),
+           ($1, 8, 'oz', 'us'),
+           ($2, 200, 'g', 'metric'),
+           ($2, 8, 'oz', 'us'),
+           ($3, 200, 'g', 'metric'),
+           ($3, 8, 'oz', 'us')
+  `, [...ids.ingredients]);
 
   // add instructions 
   ids.instructions = (await db.query(`
@@ -72,16 +75,6 @@ async function commonBeforeAll() {
     RETURNING id
   `, [ids.recipe])).rows.map(i => i.id);
 
-  // // add parent categories
-  // ids.parentCategories = (await db.query(`
-  //   INSERT INTO categories (username, label, parent_id)
-  //   VALUES ($1, 'cuisines', null), 
-  //          ($1, 'diets', null), 
-  //          ($1, 'courses', null), 
-  //          ($1, 'occasions', null)
-  //   RETURNING id
-  // `, [ids.users[0]])).rows.map(c => c.id);
-  // get parentCategories for users[0]
   ids.parentCategories = (await db.query(`
     SELECT id FROM categories
     WHERE username = $1 AND parent_id IS NULL

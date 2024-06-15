@@ -47,7 +47,7 @@ const router = express.Router({ mergeParams: true });
  * 
  * Retrieves a list of recipes.
  * 
- * Can filter on provided search filters:
+ * Can filter by provided criteria:
  * - query - string, will find case-insensitive, partial matches
  * - orderBy - array, can include ['title', 'edited_at', 'created_at', 'source_name']
  * - isAsc - boolean, if true order results ascending, else descending
@@ -76,8 +76,8 @@ router.get("/", ensureAuthUserOrAdmin, async (req, res, next) => {
  */
 router.get("/:id", ensureAuthUserOrAdmin, async (req, res, next) => {
   try {
-    const { username, id } = req.params;
-    const recipe = await Recipe.get(username, id);
+    const { id } = req.params;
+    const recipe = await Recipe.get(id);
     return res.json({ recipe });
   } catch (e) {
     return next(e);
@@ -93,8 +93,8 @@ router.get("/:id", ensureAuthUserOrAdmin, async (req, res, next) => {
  */
 router.patch("/favorites/:id", ensureAuthUserOrAdmin, async (req, res, next) => {
   try {
-    const { username, id } = req.params;
-    await Recipe.toggleFavorite(username, id);
+    const { id } = req.params;
+    await Recipe.toggleFavorite(id);
 
     return res.json({ favoriteToggled: +id })
   } catch (e) {
@@ -119,8 +119,8 @@ router.patch("/favorites/:id", ensureAuthUserOrAdmin, async (req, res, next) => 
       throw new BadRequestError(errs);
     }
 
-    const { username, id } = req.params;
-    const recipe = await Recipe.update(username, id, req.body);
+    const { id } = req.params;
+    const recipe = await Recipe.update(id, req.body);
     return res.json({ recipe });
   } catch (e) {
     return next(e);
@@ -136,8 +136,8 @@ router.patch("/favorites/:id", ensureAuthUserOrAdmin, async (req, res, next) => 
  */
  router.delete("/:id", ensureAuthUserOrAdmin, async (req, res, next) => {
   try {
-    const { username, id } = req.params;
-    await Recipe.remove(username, id);
+    const { id } = req.params;
+    await Recipe.remove(id);
     return res.json({ deleted: +id });
   } catch (e) {
     return next(e);
